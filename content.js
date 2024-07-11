@@ -14,35 +14,39 @@ function sendMessageToBackground(message) {
       // Optionally handle or log the error here
     }
   }
+
+  function getTargetName(target) {
+    return target.ariaLabel || target.innerText || target.tagName;
+  }  
   
   // Event listeners to capture user interactions
   document.addEventListener('click', function(event) {
     sendMessageToBackground({
       type: 'click',
-      targetId: event.target.tagName || event.target.id ,
+      targetId: getTargetName(event.target),
       x: event.clientX,
       y: event.clientY,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toLocaleString()
     });
   });
   
   document.addEventListener('keydown', function(event) {
     sendMessageToBackground({
       type: 'type',
-      targetId: 'document',
+      targetId: getTargetName(event.target),
       x: -1,
       y: -1,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toLocaleString()
     });
   });
   
   document.addEventListener('mouseover', function(event) {
     sendMessageToBackground({
       type: 'hover',
-      targetId: event.target.tagName || event.target.id ,
+      targetId:getTargetName(event.target) ,
       x: event.clientX,
       y: event.clientY,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toLocaleString()
     });
   });
   
@@ -50,10 +54,10 @@ function sendMessageToBackground(message) {
     const touch = event.touches[0];
     sendMessageToBackground({
       type: 'swipe',
-      targetId: event.target.tagName || event.target.id ,
+      targetId: getTargetName(event.target) ,
       x: touch.clientX,
       y: touch.clientY,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toLocaleString()
     });
   });
   
@@ -61,20 +65,20 @@ function sendMessageToBackground(message) {
     const touch = event.touches[0];
     sendMessageToBackground({
       type: 'swipe',
-      targetId: event.target.tagName || event.target.id ,
+      targetId: getTargetName(event.target),
       x: touch.clientX,
       y: touch.clientY,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toLocaleString()
     });
   });
   
   document.addEventListener('scroll', function(event) {
     sendMessageToBackground({
-      type: 'scroll',
+      type: getTargetName(event.target),
       targetId: 'document',
       x: window.scrollX,
       y: window.scrollY,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toLocaleString()
     });
   });
   
