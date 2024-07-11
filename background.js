@@ -2,8 +2,9 @@
 
 // Listener for messages from content script
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
-  console.log(`User ${message.type} on element with id "${message.targetId}" at (${message.x}, ${message.y}) at ${message.timestamp}`);
-  storeInteractionData(message);  
+ // console.log(`User ${message.type} on element with id "${message.targetId}" at (${message.x}, ${message.y}) at ${message.timestamp}`);
+ if(message.targetId.length<100) 
+ storeInteractionData(message);  
 });
 let interactionData = [];
 
@@ -106,67 +107,62 @@ return "Failed to generate narrative after multiple attempts.";
 
 // Example function to generate narrative using fetched interaction data
 function generateNarrative(interactionData) {
-   // Object to store detailed event information
-let detailedEvents = {};
+  // Object to store detailed event information
+  let detailedEvents = {};
 
-// Iterate through interactionData to store details
-interactionData.forEach(data => {
-  // Ensure data has necessary properties
-  if (!data.type || !data.timestamp) {
-    return; // Skip invalid data
-  }
-
-  // Initialize event type if not already present
-  if (!detailedEvents[data.type]) {
-    detailedEvents[data.type] = [];
-  }
-
-  // Store detailed event information
-  detailedEvents[data.type].push({
-    targetId: data.targetId || 'unknown',
-    position: { x: data.x, y: data.y },
-    timestamp: data.timestamp
-  });
-});
-
-// Generate narrative based on detailed event information
-let narrative = "Visitor's attention is focused on: ";
-
-Object.keys(detailedEvents).forEach(type => {
-  const events = detailedEvents[type];
-
-  // Add event type to the narrative
-  narrative += `${type}s`;
-
-  // Add details for each event type
-  events.forEach((event, index) => {
-    narrative += ` (${event.targetId} at (${event.position.x}, ${event.position.y})`;
-
-    // Optionally, include timestamp
-    // narrative += `, ${event.timestamp}`;
-
-    if (index < events.length - 1) {
-      narrative += ', ';
+  // Iterate through interactionData to store details
+  interactionData.forEach(data => {
+    // Ensure data has necessary properties
+    if (!data.type || !data.timestamp) {
+      return; // Skip invalid data
     }
+
+    // Initialize event type if not already present
+    if (!detailedEvents[data.type]) {
+      detailedEvents[data.type] = [];
+    }
+
+    // Store detailed event information
+    detailedEvents[data.type].push({
+      targetId: data.targetId || 'unknown',
+      position: { x: data.x, y: data.y },
+      timestamp: data.timestamp
+    });
   });
 
-  narrative += '; ';
-});
+  // Generate narrative based on detailed event information
+  let narrative = "Visitor's attention is focused on:\n";
 
-return narrative;
+  Object.keys(detailedEvents).forEach(type => {
+    const events = detailedEvents[type];
 
+    // Add event type to the narrative
+    narrative += `${type}s:\n`;
+
+    // Add details for each event type
+    events.forEach((event, index) => {
+      narrative += ` - ${event.targetId} at (${event.position.x}, ${event.position.y}) on ${event.timestamp}\n`;
+    
+
+      narrative += '\n';
+    });
+
+    narrative += '\n';
+  });
+
+  return narrative;
 }
+
 
 // Periodically update narrative every 5 seconds
 setInterval(async() => {
   // Fetch interaction data from logs or storage
-  const interactionData = fetchInteractionData();
+  interactionData = fetchInteractionData();
 
   // Generate narrative based on interaction data
   const narrative = generateNarrative(interactionData);
-  loadGPTModelAndCheck();
-  const llmresult= await generateNarrativeWithGPT(narrative);
-  
+ 
   // Display or log the narrative
   console.log("Visitor's Narrative (N):", narrative);
+  interactionData=[]
 }, 5000);
